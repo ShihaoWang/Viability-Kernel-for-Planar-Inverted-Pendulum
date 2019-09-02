@@ -112,7 +112,7 @@ struct DBNode
   int TransFeasibleFlag;       // This flag is used for state transition where the next state is not feasible for dynamical system.
   bool Viable;                  // This boolean variable is used to check whether the state is viable or not.
 
-  float Objective;              // We choose the objective to be the time to reach goal.
+  double Objective;              // We choose the objective to be the time to reach goal.
 
   SystemIndex NodeIndex;
   SystemState NodeState;

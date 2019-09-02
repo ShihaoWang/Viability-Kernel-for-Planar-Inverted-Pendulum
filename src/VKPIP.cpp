@@ -206,7 +206,8 @@ bool GoalStateTest(const DBNode & Node_k)
   double Thetadot = Node_k.NodeState.Thetadot;
 
   // Here the goal state is a state where robot's state lies within safe side while its velocity is non-negative.
-  if ((Theta>0)&&(Thetadot>=0)&&(Ldot>=0))
+  double eps = 1e-4;
+  if ((Theta>0.0)&&(Thetadot>=0.0)&&(Ldot>=0.0))
   {
     return true;
   }
@@ -486,7 +487,6 @@ int main()
             for (int l = 0; l < Thetadot_Grids; l++)
             {
               double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(i,j,k,l), StateNodeMatrix);
-              // double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(42, 14, 101, 20), StateNodeMatrix);
               if(FailureMetricVia_i>FailureMetricVia_ref)
               {
                 FailureMetricVia_ref = FailureMetricVia_i;
