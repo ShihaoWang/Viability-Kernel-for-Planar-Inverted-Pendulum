@@ -48,10 +48,10 @@ RM = /opt/cmake/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/shihao/Desktop/Polytopic-Viability-Kernel-V
+CMAKE_SOURCE_DIR = /home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/shihao/Desktop/Polytopic-Viability-Kernel-V/build
+CMAKE_BINARY_DIR = /home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/shihao/Desktop/Polytopic-Viability-Kernel-V/build/CMakeFiles /home/shihao/Desktop/Polytopic-Viability-Kernel-V/build/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build/CMakeFiles /home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/shihao/Desktop/Polytopic-Viability-Kernel-V/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -123,32 +123,32 @@ MyApp/fast:
 	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/build
 .PHONY : MyApp/fast
 
-src/HJB_VI.o: src/HJB_VI.cpp.o
+src/VKPIP.o: src/VKPIP.cpp.o
 
-.PHONY : src/HJB_VI.o
+.PHONY : src/VKPIP.o
 
 # target to build an object file
-src/HJB_VI.cpp.o:
-	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/src/HJB_VI.cpp.o
-.PHONY : src/HJB_VI.cpp.o
+src/VKPIP.cpp.o:
+	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/src/VKPIP.cpp.o
+.PHONY : src/VKPIP.cpp.o
 
-src/HJB_VI.i: src/HJB_VI.cpp.i
+src/VKPIP.i: src/VKPIP.cpp.i
 
-.PHONY : src/HJB_VI.i
+.PHONY : src/VKPIP.i
 
 # target to preprocess a source file
-src/HJB_VI.cpp.i:
-	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/src/HJB_VI.cpp.i
-.PHONY : src/HJB_VI.cpp.i
+src/VKPIP.cpp.i:
+	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/src/VKPIP.cpp.i
+.PHONY : src/VKPIP.cpp.i
 
-src/HJB_VI.s: src/HJB_VI.cpp.s
+src/VKPIP.s: src/VKPIP.cpp.s
 
-.PHONY : src/HJB_VI.s
+.PHONY : src/VKPIP.s
 
 # target to generate assembly for a file
-src/HJB_VI.cpp.s:
-	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/src/HJB_VI.cpp.s
-.PHONY : src/HJB_VI.cpp.s
+src/VKPIP.cpp.s:
+	$(MAKE) -f CMakeFiles/MyApp.dir/build.make CMakeFiles/MyApp.dir/src/VKPIP.cpp.s
+.PHONY : src/VKPIP.cpp.s
 
 # Help Target
 help:
@@ -159,9 +159,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... MyApp"
 	@echo "... edit_cache"
-	@echo "... src/HJB_VI.o"
-	@echo "... src/HJB_VI.i"
-	@echo "... src/HJB_VI.s"
+	@echo "... src/VKPIP.o"
+	@echo "... src/VKPIP.i"
+	@echo "... src/VKPIP.s"
 .PHONY : help
 
 

@@ -33,8 +33,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 # Main Code Properties
 add_executable(MyApp
-               src/HJB_VI.cpp
-               src/HJB_Stability.h)
+               src/VKPIP.cpp
+               src/VKPIP.h)
 
 target_link_libraries(MyApp)
 

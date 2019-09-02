@@ -1,5 +1,5 @@
-#ifndef HJB_STABILITY_H
-#define HJB_STABILITY_H
+#ifndef VKPIP_H
+#define VKPIP_H
 #include <iostream>
 #include <math.h>
 #include <Eigen/Dense>
@@ -62,7 +62,7 @@ struct DBNode
   {
     SelfIndex = -1;
     NextIndex = -2;               // -2 means has not been initialized, -1 means no next node, >0 gives node index of the next node.
-    LengthFeasibleFlag = 1;       // default to be feasible
+    TransFeasibleFlag = 1;       // default to be feasible
 
     Viable = false;
     Objective = 0.0;
@@ -72,7 +72,7 @@ struct DBNode
     // Node instantiation
     SelfIndex = L_index * Ldot_Grids * Theta_Grids * Thetadot_Grids + Ldot_index * Theta_Grids * Thetadot_Grids + Theta_index * Thetadot_Grids + Thetadot_index;
     NextIndex = -2;
-    LengthFeasibleFlag = 1;
+    TransFeasibleFlag = 1;
     Viable = false;
     Objective = 0.0;
 
@@ -91,7 +91,7 @@ struct DBNode
   {
     SelfIndex = L_index * Ldot_Grids * Theta_Grids * Thetadot_Grids + Ldot_index * Theta_Grids * Thetadot_Grids + Theta_index * Thetadot_Grids + Thetadot_index;
     NextIndex = -2;
-    LengthFeasibleFlag = 1;
+    TransFeasibleFlag = 1;
     Viable = false;
     Objective = 0.0;
 
@@ -109,7 +109,7 @@ struct DBNode
   // Each node has the following information
   int SelfIndex;                // The index of its own
   int NextIndex;                // The index of the next node it should go according to the principle of optimality
-  int LengthFeasibleFlag;       // This flag is used for state transition where the next state is not feasible for dynamical system.
+  int TransFeasibleFlag;       // This flag is used for state transition where the next state is not feasible for dynamical system.
   bool Viable;                  // This boolean variable is used to check whether the state is viable or not.
 
   float Objective;              // We choose the objective to be the time to reach goal.

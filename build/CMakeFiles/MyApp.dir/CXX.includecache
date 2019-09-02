@@ -6,7 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/shihao/Desktop/Polytopic-Viability-Kernel-V/src/HJB_Stability.h
+/home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/src/VKPIP.cpp
+VKPIP.h
+/home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/src/VKPIP.h
+
+/home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/src/VKPIP.h
 iostream
 -
 math.h
@@ -19,10 +23,6 @@ set
 -
 ctime
 -
-
-/home/shihao/Desktop/Polytopic-Viability-Kernel-V/src/HJB_VI.cpp
-HJB_Stability.h
-/home/shihao/Desktop/Polytopic-Viability-Kernel-V/src/HJB_Stability.h
 
 /home/shihao/eigen-3.3.5/Eigen/Cholesky
 Core

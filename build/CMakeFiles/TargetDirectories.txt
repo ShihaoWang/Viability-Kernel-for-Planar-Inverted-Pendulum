@@ -1,3 +1,3 @@
-/home/shihao/Desktop/Polytopic-Viability-Kernel-V/build/CMakeFiles/rebuild_cache.dir
-/home/shihao/Desktop/Polytopic-Viability-Kernel-V/build/CMakeFiles/MyApp.dir
-/home/shihao/Desktop/Polytopic-Viability-Kernel-V/build/CMakeFiles/edit_cache.dir
+/home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build/CMakeFiles/rebuild_cache.dir
+/home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build/CMakeFiles/MyApp.dir
+/home/shihao/Desktop/Viability-Kernel-for-Planar-Inverted-Pendulum/build/CMakeFiles/edit_cache.dir

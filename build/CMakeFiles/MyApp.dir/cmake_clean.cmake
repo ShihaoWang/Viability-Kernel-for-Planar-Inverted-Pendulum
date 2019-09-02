@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/MyApp.dir/src/HJB_VI.cpp.o"
+  "CMakeFiles/MyApp.dir/src/VKPIP.cpp.o"
   "MyApp.pdb"
   "MyApp"
 )

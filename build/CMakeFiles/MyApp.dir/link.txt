@@ -1,1 +1,1 @@
-/usr/bin/c++   -I/usr/local/include -std=c++11 -g   -L/usr/local/lib -rdynamic CMakeFiles/MyApp.dir/src/HJB_VI.cpp.o  -o MyApp 
+/usr/bin/c++   -I/usr/local/include -std=c++11 -g   -L/usr/local/lib -rdynamic CMakeFiles/MyApp.dir/src/VKPIP.cpp.o  -o MyApp 

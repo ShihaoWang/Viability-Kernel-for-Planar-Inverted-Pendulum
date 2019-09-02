@@ -1,4 +1,4 @@
-#include "HJB_Stability.h"
+#include "VKPIP.h"
 
 // This function computes the failure metric with the forward value iteration method.
 // One more change that I will have to make is the control input: I would like to change the control input to be robot's length acceleration.
@@ -9,20 +9,18 @@ const double PI = 3.141592653589793238463;
 double LLow = 0.35;             double LUpp = 1.05;
 double LdotLow = -1.0;          double LdotUpp = 1.0;
 double ThetaLow = -PI/6.0;      double ThetaUpp = PI/2.0;
-double ThetadotLow = -2.0;      double ThetadotUpp = 2.0;
+double ThetadotLow = -1.5;      double ThetadotUpp = 1.5;
 
-const int L_Grids = 71;                           // Its unit 0.01 m
-const int Ldot_Grids = 21;                        // Its unit 0.1m/s
-const int Theta_Grids = 211;                      // Its unit 9.97x10^(-3) rad
-const int Thetadot_Grids = 41;                    // Its unit 0.1rad/s
+const int L_Grids = 71;                             // Its unit 0.01 m
+const int Ldot_Grids = 21;                          // Its unit 0.1m/s
+const int Theta_Grids = 211;                        // Its unit 9.97x10^(-3) rad
+const int Thetadot_Grids = 31;                      // Its unit 0.1rad/s
 
 double delta_t = 0.1;
 const int F_Grids = 101;                           // This is the discretization of the control points within a range
 
 double g = 9.81;
-
-double Clow = 0.5;
-double Cupp = 2.5;
+double gUppCoef = 2.25;
 
 // The corresponding dimension size of the StateMatrix
 double L_length =         LUpp - LLow;
@@ -30,10 +28,10 @@ double Ldot_length =      LdotUpp - LdotLow;
 double Theta_length =     ThetaUpp - ThetaLow;
 double Thetadot_length =  ThetadotUpp - ThetadotLow;
 
-double L_unit =           L_length/(1.0* L_Grids - 1.0);
-double Ldot_unit =        Ldot_length/(1.0* Ldot_Grids - 1.0);
-double Theta_unit =       Theta_length/(1.0* Theta_Grids - 1.0);
-double Thetadot_unit =    Thetadot_length/(1.0* Thetadot_Grids - 1.0);
+double L_unit =           L_length/(1.0 * L_Grids - 1.0);
+double Ldot_unit =        Ldot_length/(1.0 * Ldot_Grids - 1.0);
+double Theta_unit =       Theta_length/(1.0 * Theta_Grids - 1.0);
+double Thetadot_unit =    Thetadot_length/(1.0 * Thetadot_Grids - 1.0);
 
 std::vector<double> L_vector(L_Grids), Ldot_vector(Ldot_Grids), Theta_vector(Theta_Grids), Thetadot_vector(Thetadot_Grids);
 
@@ -179,106 +177,79 @@ SystemIndex SystemState2StateIndex(const SystemState & x)
   return SystemIndex_i;
 }
 
-void FailureMetricUpdate(DBNode& Node_k)
+void ObjectiveUpdate(DBNode& Node_k, const bool & ViableFlag)
 {
+  // This function is only used in state initialization stage.
   // A positive value indicates that the given state is viable, otherwise the state is not viable.
-
-  // Failure Metric
-  double L_k, Ldot_k, Theta_k, Thetadot_k;
-  L_k =         Node_k.NodeState.L;
-  Ldot_k =      Node_k.NodeState.Ldot;
-  Theta_k =     Node_k.NodeState.Theta;
-  Thetadot_k =  Node_k.NodeState.Thetadot;
-
-  // Now it is updating forward!
-  double Node_kp1_L = Node_k.NodeState.L + Node_k.NodeState.Ldot * delta_t;
-
-  // This initial cost needs to be recalculated.
-  if((Theta_k>0.0)&&(Thetadot_k>=0.0))
+  switch (ViableFlag)
   {
-    // In this case, the cost is zero.
-    Node_k.FailureMetric = 0.0;
-    return;
-  }
-
-  float KE_ijkl, SC_ijkl, IC_ijkl;
-
-  /*
-      Term1: Kinetic Energy Cost
-  */
-  KE_ijkl = Ldot_k * Ldot_k  + L_k * L_k * Thetadot_k * Thetadot_k;
-
-  /*
-      Term2: Side Cost
-  */
-  switch (Node_k.ThetaViableFlag)
-  {
-    case 0:
-    SC_ijkl = -1.0 * Ctv * Theta_k;
-    break;
-    case 1:
-    SC_ijkl = 0.0;
-    break;
-    default:
-    break;
-  }
-
-  /*
-      Term3: Infeasibility Cost
-  */
-  switch (Node_k.LengthFeasibleFlag)
-  {
-    case 0:
-    // Length Infeasible FailureMetric
-    if(Node_kp1_L<LLow)
+    case true:
     {
-      IC_ijkl = Clv * (LLow - Node_kp1_L);
-    }
-    else
-    {
-      IC_ijkl = Clv * (Node_kp1_L - LUpp);
+      // This indicates that the current Node_k is at goal
+      Node_k.Objective = 0.0;
     }
     break;
-    case 1:
-    IC_ijkl = 0.0;
-    break;
     default:
+    {
+      Node_k.Objective = -1.0;      // A non-viable state will be assigned a negative value.
+    }
     break;
   }
-
-  // Total objective function
-  Node_k.FailureMetric = KE_ijkl + SC_ijkl + IC_ijkl;
 }
 
-void DBNodeTLcUpdate(DBNode & Node_k)
+bool GoalStateTest(const DBNode & Node_k)
+{
+  // This function is used to tell whether a given state is at goal or not.
+  double L = Node_k.NodeState.L;
+  double Ldot = Node_k.NodeState.Ldot;
+  double Theta = Node_k.NodeState.Theta;
+  double Thetadot = Node_k.NodeState.Thetadot;
+
+  // Here the goal state is a state where robot's state lies within safe side while its velocity is non-negative.
+  if ((Theta>0)&&(Thetadot>=0)&&(Ldot>=0))
+  {
+    return true;
+  }
+  return false;
+}
+
+void DBNodeInfoUpdate(DBNode & Node_k)
 {
   // This function can only be called after Node_k has been initialized
-  // The following properties for Node_k will be updated.
-  //  1. ThetaViableFlag
-  //  2. LengthFeasibleFlag
-  //  3. FailureMetric
 
-  // 1. ThetaViableFlag
-  if(Node_k.NodeState.Theta<0){  Node_k.ThetaViableFlag = 0;  }
-  // 2. LengthFeasibleFlag
   double Node_kp1_L = Node_k.NodeState.L + Node_k.NodeState.Ldot * delta_t;
   if((Node_kp1_L<LLow)||(Node_kp1_L>LUpp))
   {
-    Node_k.LengthFeasibleFlag = 0;
+    Node_k.TransFeasibleFlag = 0;
   }
-  // 3. FailureMetric
-  FailureMetricUpdate(Node_k);
+  switch (Node_k.TransFeasibleFlag)
+  {
+    case 0:
+    {
+      Node_k.Objective = -1.0;
+    }
+    break;
+    default:
+    {
+      bool GoalFlag = GoalStateTest(Node_k);
+      Node_k.Viable = GoalFlag;
+      ObjectiveUpdate(Node_k, GoalFlag);
+    }
+    break;
+  }
 }
 
 double Forward_Evaluation(DBNode& Node_k, Eigen::Tensor<DBNode,4>& StateNodeMatrix)
 {
   // This function conducts the first-order Euler integration from the kth-layer node to the k+1th layer node.
   /*
-  L_{k+1} =         L_{k} + Ldot_{k} * delta_t;
-  Ldot_{k+1} =      Ldot_{k} + Lddot_{k} * delta_t;
-  Theta_{k+1} =     Theta_{k} + Thetadot_{k} * delta_t;
-  Thetadot_{k+1} =  Thetadot_{k} + Thetaddot_{k} * delta_t;
+    L_{k+1} =         L_{k} + Ldot_{k} * delta_t;
+    Ldot_{k+1} =      Ldot_{k} + Lddot_{k} * delta_t;
+    Theta_{k+1} =     Theta_{k} + Thetadot_{k} * delta_t;
+    Thetadot_{k+1} =  Thetadot_{k} + Thetaddot_{k} * delta_t;
   */
+
+  // If the output is greater than 0, this indicates that this node has found another path to reach goal with a lower cost.
 
   std::set< std::tuple<int, int, int, int>> Reachable_Set;
 
@@ -292,12 +263,11 @@ double Forward_Evaluation(DBNode& Node_k, Eigen::Tensor<DBNode,4>& StateNodeMatr
   // k+1th layer
   double L_kp1, Ldot_kp1, Theta_kp1, Thetadot_kp1;
 
-  // Backward Integration
-  switch (Node_k.LengthFeasibleFlag)
+  switch (Node_k.TransFeasibleFlag)
   {
     case 0:
     {
-      // This means that there is no need to integrate this node
+      // This means that there is no need to integrate this node.
       return 0.0;
     }
     break;
@@ -312,12 +282,9 @@ double Forward_Evaluation(DBNode& Node_k, Eigen::Tensor<DBNode,4>& StateNodeMatr
   Thetadot_kp1 = Thetadot_k + Thetaddot_k * delta_t;
 
   // The bounds on the acceleration of Pendulum Length
-  double Lddot_Low = L_k * Thetadot_k * Thetadot_k - g * cos(Theta_k);
-  // However, this Lddot_Low has to be nonpositive in order to remain feasible.
+  double Lddot_Low = -g * cos(Theta_k);
   Lddot_Low = min(Lddot_Low, 0.0);
-  Lddot_Low = Clow * Lddot_Low;
-  double Lddot_Upp = Cupp * g * cos(Theta_k)/(LLow - LUpp) * (L_k - LLow) + Cupp * g * cos(Theta_k);
-  // In the same fashion, the Lddot_Upp has to be nonnegative in order to remain feasible.
+  double Lddot_Upp = gUppCoef * g * cos(Theta_k)/(LLow - LUpp) * (L_k - LLow) + gUppCoef * g * cos(Theta_k);
   Lddot_Upp = max(Lddot_Upp, 0.0);
   double Lddot_Min = Lddot_Low;
   double Lddot_Max = max(Lddot_Low, Lddot_Upp);
@@ -332,18 +299,18 @@ double Forward_Evaluation(DBNode& Node_k, Eigen::Tensor<DBNode,4>& StateNodeMatr
     Reachable_Set.insert(make_tuple(x_kp1_index.L_index, x_kp1_index.Ldot_index, x_kp1_index.Theta_index, x_kp1_index.Thetadot_index));
   }
 
-  double FailureMetricVia = 0.0;
+  float ObjectiveVia = 0.0;
+
   switch (Reachable_Set.size())
   {
     case 0:
     {
-      // This means that the failure metric for this node has not been changed due to the infeasibility.
-      return FailureMetricVia;
+      return ObjectiveVia;
     }
     default:
     {
       const int ReachableNodeNumber = Reachable_Set.size();
-      std::vector<double> Reachable_FailureMetric(ReachableNodeNumber);
+      std::vector<double> Reachable_Objective(ReachableNodeNumber);
       std::set<std::tuple<int, int, int, int>>::iterator Reachable_Set_Itr = Reachable_Set.begin();
       for (int i = 0; i < ReachableNodeNumber; i++)
       {
@@ -357,19 +324,56 @@ double Forward_Evaluation(DBNode& Node_k, Eigen::Tensor<DBNode,4>& StateNodeMatr
         }
         // Here DBNodePtr points to the node at (k+1)th layer
         DBNode* DBNodePtr =&StateNodeMatrix(std::get<0>(*Reachable_Set_Itr),std::get<1>(*Reachable_Set_Itr),std::get<2>(*Reachable_Set_Itr),std::get<3>(*Reachable_Set_Itr));
-        if(Node_k.FailureMetric>DBNodePtr->FailureMetric)
+
+        float Reachable_Objective_i = 0.0;
+        switch (DBNodePtr->Viable)
         {
-          // This means that there is a better solution for Node at k
-          Reachable_FailureMetric[i] = Node_k.FailureMetric - DBNodePtr->FailureMetric;
-          Node_k.FailureMetric = DBNodePtr->FailureMetric;
-          Node_k.NextIndex = DBNodePtr->SelfIndex;
+          case true:
+          {
+            double UpdatedObj = DBNodePtr->Objective + delta_t;
+            switch (Node_k.Viable)
+            {
+              case true:
+              {
+                if(Node_k.Objective>UpdatedObj)
+                {
+                  // This indicates that we have a better path.
+                  Reachable_Objective_i = Node_k.Objective - UpdatedObj;
+                  Node_k.Objective = UpdatedObj;
+                  Node_k.NextIndex = DBNodePtr->SelfIndex;
+                }
+                else
+                {
+                  // This means that the current path is not as good as the current one.
+                  Reachable_Objective_i = 0.0;
+                }
+              }
+              break;
+              default:
+              {
+                // This means that the current node is not viable, so we should make it to be viable.
+                Node_k.Viable = true;
+                Reachable_Objective_i = UpdatedObj;
+                Node_k.Objective = UpdatedObj;
+                Node_k.NextIndex = DBNodePtr->SelfIndex;
+              }
+              break;
+            }
+            Reachable_Objective[i] = Reachable_Objective_i;
+          }
+          break;
+          default:
+          {
+            Reachable_Objective[i] = 0.0;
+          }
+          break;
         }
       }
-      FailureMetricVia = *std::max_element(Reachable_FailureMetric.begin(), Reachable_FailureMetric.end());
+      ObjectiveVia = *std::max_element(Reachable_Objective.begin(), Reachable_Objective.end());
     }
     break;
   }
-  return FailureMetricVia;
+  return ObjectiveVia;
 }
 
 void HJBDataWriter(const std::vector<int>& NodeParentIndVector, const std::vector<float>& NodeCostVector, const int & Angle_i)
@@ -405,8 +409,8 @@ void StateNodeMatrixInit(Eigen::Tensor<DBNode,4> &StateNodeMatrix, std::vector<f
         {
           Node_ptr = &StateNodeMatrix(i,j,k,l);
           Node_ptr->InitUpdate(i, j, k, l, L_Grids, Ldot_Grids, Theta_Grids, Thetadot_Grids, L_vector, Ldot_vector, Theta_vector, Thetadot_vector);
-          DBNodeTLcUpdate(*Node_ptr);
-          NodeFailureMetricVector[Node_ptr->SelfIndex] = Node_ptr->FailureMetric;
+          DBNodeInfoUpdate(*Node_ptr);
+          NodeFailureMetricVector[Node_ptr->SelfIndex] = Node_ptr->Objective;
         }
       }
     }
@@ -439,6 +443,7 @@ int main()
   StateVectorSpecs.push_back(AngleLow * 1.0);
   StateVectorSpecs.push_back(AngleUpp * 1.0);
   StateVectorSpecs.push_back(AngleDiff * 1.0);
+  StateVectorSpecs.push_back(delta_t);        // The last element is the timestep duration.
 
   // Save the PVkDataSpecs first into PVkDataSpecs.bin
   FILE * StateVectorSpecsFile = NULL;
@@ -447,14 +452,13 @@ int main()
   fclose(StateVectorSpecsFile);
 
   /*
-  Main computation objects initialization
+    Main computation objects initialization
   */
   StateVectorSubs(L_vector, Ldot_vector, Theta_vector, Thetadot_vector);
 
   for (int i = 0; i < (AngleUpp - AngleLow)/AngleDiff + 1; i++)
   {
     int Angle_i = AngleLow + AngleDiff * i;
-
     g = 9.81 * cos(Angle_i*1.0/180 * 3.1415926535897);
     cout<<g<<endl;
     Eigen::Tensor<DBNode,4> StateNodeMatrix(L_Grids, Ldot_Grids, Theta_Grids, Thetadot_Grids);
@@ -465,7 +469,7 @@ int main()
 
     std::clock_t start; double duration; start = std::clock();
 
-    double FailureMetricVia = 0.1;              // Here this value is the evaluation of the failure metric change to determine the convergence.
+    double FailureMetricVia = 0.01;              // Here this value is the evaluation of the failure metric change to determine the convergence.
     double FailureMetricTol = 1e-10;            // Tolerence for convergence completeness
     double FailureMetricVia_i;
 
@@ -481,11 +485,8 @@ int main()
           {
             for (int l = 0; l < Thetadot_Grids; l++)
             {
-              // double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(i,j,k,l), StateNodeMatrix);
-              double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(42, 14, 43, 20), StateNodeMatrix);
-              // double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(47, 50, 57, 8), StateNodeMatrix);
-              // double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(22,35,43,19), StateNodeMatrix);
-              // double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(7,50,41,19), StateNodeMatrix);
+              double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(i,j,k,l), StateNodeMatrix);
+              // double FailureMetricVia_i = Forward_Evaluation(StateNodeMatrix(42, 14, 101, 20), StateNodeMatrix);
               if(FailureMetricVia_i>FailureMetricVia_ref)
               {
                 FailureMetricVia_ref = FailureMetricVia_i;
@@ -495,7 +496,7 @@ int main()
         }
       }
       FailureMetricVia = FailureMetricVia_ref;
-      printf ("FailureMetricVia value: %f \n", FailureMetricVia);
+      printf ("Objective Viation: %f \n", FailureMetricVia);
     }
 
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
@@ -511,7 +512,7 @@ int main()
           for (int l = 0; l < Thetadot_Grids; l++)
           {
             NodeTransIndVector[IterIndex] = StateNodeMatrix(i,j,k,l).NextIndex;
-            NodeFailureMetricVector[IterIndex] = StateNodeMatrix(i,j,k,l).FailureMetric;
+            NodeFailureMetricVector[IterIndex] = StateNodeMatrix(i,j,k,l).Objective;
             IterIndex = IterIndex + 1;
           }
         }
